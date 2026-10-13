@@ -13,40 +13,87 @@ FPS = 60 #ensures game is smooth, refresh rate is same
 health_font = pygame.font.SysFont('georgia', 20)
 win_font = pygame.font.SysFont('timesnewroman', 50)
 
-clock = pygame.time.Clock()
+clock = pygame.time.Clock() #create clock object
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Galatic Battle")
 
 divider = pygame.Rect(WIDTH//2 - 5, 0, 10, HEIGHT) #rect is an object
 
-#creating player class
-class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y, image_path, controls, side):
-        super().__init__()
-        self.image = pygame.image.load(image_path)
-        self.rect = self.image.get_rect(topleft = (x,y))
+player1_x = 100
+player1_y = 200
 
-        self.controls = controls
-        self.side = side
+player2_x = 800
+player2_y = 200
+
+#creating player class blueprint
+class Player(pygame.sprite.Sprite): #makes Player inherit from Pygame's Sprite class.
+    def __init__(self, x, y, image_path, control, side):
+        super().__init__() #initialises the parent sprite class
+        self.image = pygame.image.load(image_path) #loads players image from file
+        #creating hitbox/collider around the image
+        self.rect = self.image.get_rect(topleft = (x,y)) #creates rectangle to position the image
+
+        self.control = control
+        self.side = side #stores side which player belongs to
         self.health = 10
-        self.bullets = pygame.sprite.Group()
+        self.bullets = pygame.sprite.Group() #stores that players bullets in a group
+
+    def move(self, pressed_keys):
+        if pressed_keys[self.control['left']]:
+            self.rect.x -= PLAYER_SPEED
+        if pressed_keys[self.control['up']]:
+            self.rect.y -= PLAYER_SPEED
+        if pressed_keys[self.control['right']]:
+            self.rect.x += PLAYER_SPEED
+        if pressed_keys[self.control['down']]:
+            self.rect.y +=  PLAYER_SPEED
+
+
+player1 = Player(player1_x, player1_y, 'assets/left.png',{'left':pygame.K_a, 'up':pygame.K_w, 'down':pygame.K_s, 'right':pygame.K_d}, 'left')
+player2 = Player(player2_x, player2_y, 'assets/right.png',{'left':pygame.K_LEFT, 'up':pygame.K_UP, 'down':pygame.K_DOWN, 'right':pygame.K_RIGHT},'right')
+
+#creating player group --> when structure given to group, it is automatically assigned to all its members, instead of giving it to to them one by one
+players = pygame.sprite.Group() 
+players.add(player1, player2)
+
 
 def draw():
     screen.fill('green')
     pygame.draw.rect(screen, 'black', divider)
 
-    pygame.display.update() #updating screen display (last instruction in loop) change
+    #displaying players
+    players.draw(screen) #system function used by specific group wherever they are
 
+    #styling health text, doesn't display the actual text on screen
+    p1_healthtext = health_font.render(f"Health: {player1.health}", True, 'black') #true smoothens edge points automatically
+    p2_healthtext = health_font.render(f"Health: {player2.health}", True, 'black')
+
+    #displaing text on screen
+    screen.blit(p1_healthtext, (50, 30))
+    screen.blit(p2_healthtext, (850, 30))
+
+
+    pygame.display.update() #updating screen display (last instruction in loop) change
+  
 def main():
     while True:
         draw()
+
+        #getting all the keys pressed
+        keys = pygame.key.get_pressed() #function
+
+        #calling move function
+        player1.move(keys)
+        player2.move(keys)
+
+
         for event in pygame.event.get(): #check for event
 
             if event.type == pygame.QUIT:
                 exit()
-
         
+             
     pygame.quit()
 
 main()
