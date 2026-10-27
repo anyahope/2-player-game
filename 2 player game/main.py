@@ -1,4 +1,3 @@
-
 import pygame
 
 pygame.init() #starts all features
@@ -26,6 +25,22 @@ player1_y = 200
 
 player2_x = 800
 player2_y = 200
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, direction):
+        super().__init__()
+        self.image = pygame.Surface((10, 5))
+        self.image.fill('red')
+        self.rect = self.image.get_rect(center = (x,y))
+        self.direction = direction
+
+    def update(self):
+        self.rect.x += BULLET_SPEED * self.direction #make sure
+        #destroying bullets crossing the screen
+        if self.rect.right < 0 or self.rect.left > WIDTH:
+            self.kill()
+
+
 
 #creating player class blueprint
 class Player(pygame.sprite.Sprite): #makes Player inherit from Pygame's Sprite class.
@@ -70,7 +85,7 @@ players.add(player1, player2)
 
 #user define function to make sure all drawing displayed on screen is put tgt in one place
 def draw():
-    screen.fill('green')
+    screen.fill('pink')
     pygame.draw.rect(screen, 'black', divider)
 
     #displaying players
