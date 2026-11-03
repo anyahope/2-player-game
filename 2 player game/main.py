@@ -64,7 +64,6 @@ class Player(pygame.sprite.Sprite): #makes Player inherit from Pygame's Sprite c
             self.rect.x += PLAYER_SPEED
         if pressed_keys[self.control['down']]:
             self.rect.y +=  PLAYER_SPEED
-
         #top and bottom screen boundary
         self.rect.top = max(0, self.rect.top) #look for max value between 2 options
         self.rect.bottom = min(self.rect.bottom, HEIGHT)
@@ -75,6 +74,19 @@ class Player(pygame.sprite.Sprite): #makes Player inherit from Pygame's Sprite c
         else:
             self.rect.left = max(divider.right, self.rect.left)
             self.rect.right = min(self.rect.right, WIDTH)
+
+    def shoot(self):
+        if len(self.bullets) >= MAX_BULLETS:
+            return
+        if self.side == 'left':
+            bullet = Bullet(self.rect.right, self.rect.centery, 1)
+        else:
+            bullet = Bullet(self.rect.left, self.rect.centery, -1)
+        self.bullets.add(bullet)
+
+    def update(self):
+        self.bullets.update()
+    
 #creating player object
 player1 = Player(player1_x, player1_y, 'assets/left.png',{'left':pygame.K_a, 'up':pygame.K_w, 'down':pygame.K_s, 'right':pygame.K_d}, 'left')
 player2 = Player(player2_x, player2_y, 'assets/right.png',{'left':pygame.K_LEFT, 'up':pygame.K_UP, 'down':pygame.K_DOWN, 'right':pygame.K_RIGHT},'right')
@@ -83,10 +95,32 @@ player2 = Player(player2_x, player2_y, 'assets/right.png',{'left':pygame.K_LEFT,
 players = pygame.sprite.Group() 
 players.add(player1, player2)
 
+def check_collision():
+    for bullet in player1.bullets:
+        if bullet.rect.colliderect(player2.rect):
+            player2.health = player2.health - 1
+            bullet.kill()
+    for bullet in player2.bullets:
+        if bullet.rect.colliderect(player1.rect):
+            player1.health = player1.health - 1
+            bullet.kill()
+
+
+def show_winner(message):
+    screen.fill('white')
+    message = win_font.render(message, False, 'black')
+    screen.blit(message, (WIDTH//2 - message.get_width()//2, HEIGHT//2 - message.get_height()//2 ))
+    pygame.display.update()
+    pygame.time.delay(3000)
+
 #user define function to make sure all drawing displayed on screen is put tgt in one place
 def draw():
     screen.fill('pink')
     pygame.draw.rect(screen, 'black', divider)
+
+    #displaying bullets
+    player1.bullets.draw(screen) #not common
+    player2.bullets.draw(screen)
 
     #displaying players
     players.draw(screen) #system function used by specific group wherever they are
@@ -114,9 +148,27 @@ def main():
         player1.move(keys)
         player2.move(keys)
 
+        #calling collision function
+        check_collision()
+
+        if player1.health <= 0:
+            show_winner('Player 2 wins!')
+            break
+        if player2.health <= 0:
+            show_winner('Player 1 wins!')
+            break
+
+        #applying update function to all player members
+        players.update()
 
         for event in pygame.event.get(): #check for event
 
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LSHIFT:
+                    player1.shoot()
+                if event.key == pygame.K_RSHIFT:
+                    player2.shoot()
+            
             if event.type == pygame.QUIT:
                 exit()
         
